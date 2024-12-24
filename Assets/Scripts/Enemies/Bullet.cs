@@ -27,7 +27,8 @@ public class Bullet : MonoBehaviour
 		if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
 		{
 			collision.GetComponent<Player>().Knockback(transform.position.x);
-			Destroy(gameObject);
+			collision.GetComponent<Player>().Damage();
+            Destroy(gameObject);
 		}
 
 		if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))

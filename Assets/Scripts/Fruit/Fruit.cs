@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Fruit : MonoBehaviour
@@ -22,6 +20,7 @@ public class Fruit : MonoBehaviour
         if (player != null)
         {
             _gameManager.AddFruit();
+            AudioManager.Instance.PlaySFX(8, true);
             Destroy(gameObject);
             GameObject newFx = Instantiate(_pickupVFX, transform.position, Quaternion.identity);
         }

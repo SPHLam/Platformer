@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45fe2fd451ef1e043a50f3cad71420f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _pickupVFX: {fileID: 3709953325219459027, guid: bc756fd5aa82d6740ba08efdc000943b, type: 3}
 --- !u!58 &891866706163590634
 CircleCollider2D:
   m_ObjectHideFlags: 0

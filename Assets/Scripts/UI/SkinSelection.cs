@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -32,7 +30,7 @@ public class SkinSelection : MonoBehaviour
         UpdateSkinDisplay();
 
         _mainMenuUI = GetComponentInParent<MainMenu>();
-        _levelSelectionUI = _mainMenuUI.GetComponentInChildren<LevelSelection>(true);   
+        _levelSelectionUI = _mainMenuUI.GetComponentInChildren<LevelSelection>(true);
     }
 
     private void LoadSkinsUnlocked()
@@ -54,6 +52,8 @@ public class SkinSelection : MonoBehaviour
         if (_skinIndex > 3)
             _skinIndex = 0;
 
+        AudioManager.Instance.PlaySFX(4);
+
         UpdateSkinDisplay();
     }
 
@@ -62,6 +62,8 @@ public class SkinSelection : MonoBehaviour
         _skinIndex--;
         if (_skinIndex < 0)
             _skinIndex = _maxIndex;
+
+        AudioManager.Instance.PlaySFX(4);
 
         UpdateSkinDisplay();
     }
@@ -75,6 +77,8 @@ public class SkinSelection : MonoBehaviour
             SkinManager.Instance.SetSkinId(_skinIndex);
             _mainMenuUI.SwitchUI(_levelSelectionUI.gameObject);
         }
+
+        AudioManager.Instance.PlaySFX(4);
 
         UpdateSkinDisplay();
     }
@@ -100,7 +104,7 @@ public class SkinSelection : MonoBehaviour
             _priceText.text = "Price: " + _skinList[_skinIndex].skinPrice;
             _buyText.text = "Buy";
         }
-        
+
     }
     private int FruitsInBank()
     {
@@ -110,7 +114,11 @@ public class SkinSelection : MonoBehaviour
     private void BuySkin(int index)
     {
         if (!HaveEnoughFruits(_skinList[_skinIndex].skinPrice))
+        {
+            AudioManager.Instance.PlaySFX(6);
             return;
+        }
+
 
         string skinName = _skinList[_skinIndex].skinName;
         _skinList[_skinIndex].unlocked = true;
@@ -126,6 +134,6 @@ public class SkinSelection : MonoBehaviour
             return true;
         }
         else
-            return false; 
+            return false;
     }
 }

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
@@ -14,18 +12,18 @@ public class Enemy : MonoBehaviour
     [SerializeField] protected float moveSpeed = 2f;
     protected bool canMove = true;
     [SerializeField] protected float idleDuration = 2f;
-	protected float idleTimer = 2f;
+    protected float idleTimer = 2f;
     private bool _canFlip = true;
 
-	[Header("Basic collision")]
+    [Header("Basic collision")]
     [SerializeField] protected float groundCheckDistance = 1.1f;
     [SerializeField] protected float wallCheckDistance = 0.7f;
-	[SerializeField] protected float playerDetectionDistance = 15f;
-	[SerializeField] protected LayerMask playerLayerMask;
-	[SerializeField] protected LayerMask groundLayerMask;
-	[SerializeField] protected Transform groundCheck;
+    [SerializeField] protected float playerDetectionDistance = 15f;
+    [SerializeField] protected LayerMask playerLayerMask;
+    [SerializeField] protected LayerMask groundLayerMask;
+    [SerializeField] protected Transform groundCheck;
 
-	[Header("Death detail")]
+    [Header("Death detail")]
     [SerializeField] protected float deathImpactSpeed = 5f;
     [SerializeField] protected float deathRotationSpeed = 150f;
     protected bool isDead;
@@ -35,9 +33,9 @@ public class Enemy : MonoBehaviour
     protected bool isTouchingWall;
     protected bool isGrounded;
     protected bool isGroundInfrontDetected;
-	protected bool isPlayerDetected;
+    protected bool isPlayerDetected;
 
-	protected virtual void Awake()
+    protected virtual void Awake()
     {
         animator = GetComponent<Animator>();
         rigidBody = GetComponent<Rigidbody2D>();
@@ -45,16 +43,17 @@ public class Enemy : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-	protected virtual void Start()
-	{
-		InvokeRepeating(nameof(UpdatePlayerReference), 0, 10);
-
+    protected virtual void Start()
+    {
         if (spriteRenderer.flipX == true && !isFacingRight)
         {
             spriteRenderer.flipX = false;
             Flip();
         }
-	}
+
+        UpdatePlayerReference();
+        GameManager.OnPlayerRespawn += UpdatePlayerReference;
+    }
 
     private void UpdatePlayerReference()
     {
@@ -62,12 +61,12 @@ public class Enemy : MonoBehaviour
             player = GameObject.FindWithTag("Player").transform;
     }
 
-	protected virtual void Update()
+    protected virtual void Update()
     {
         idleTimer -= Time.deltaTime;
 
-		HandleCollision();
-		HandleAnimation();
+        HandleCollision();
+        HandleAnimation();
 
         if (isDead)
         {
@@ -79,7 +78,7 @@ public class Enemy : MonoBehaviour
 
     public virtual void Die()
     {
-        foreach(Collider2D collider in colliders)
+        foreach (Collider2D collider in colliders)
         {
             collider.enabled = false;
         }
@@ -87,6 +86,7 @@ public class Enemy : MonoBehaviour
         animator.SetTrigger("Hit");
         isDead = true;
 
+        GameManager.OnPlayerRespawn -= UpdatePlayerReference;
         Destroy(gameObject, 10f);
     }
 
@@ -126,8 +126,8 @@ public class Enemy : MonoBehaviour
         isTouchingWall = Physics2D.Raycast(transform.position, Vector2.right * facingDirection, wallCheckDistance, groundLayerMask);
 
         // Detect if this enemy can detect the Player
-		isPlayerDetected = Physics2D.Raycast(transform.position, Vector2.right * facingDirection, playerDetectionDistance, playerLayerMask);
-	}
+        isPlayerDetected = Physics2D.Raycast(transform.position, Vector2.right * facingDirection, playerDetectionDistance, playerLayerMask);
+    }
     #endregion
 
     #region Flip
@@ -138,9 +138,9 @@ public class Enemy : MonoBehaviour
             if (_canFlip)
             {
                 _canFlip = false;
-				Invoke(nameof(Flip), 0.35f);
-			}
-		}
+                Invoke(nameof(Flip), 0.35f);
+            }
+        }
     }
 
     /// <summary>
@@ -152,16 +152,16 @@ public class Enemy : MonoBehaviour
         transform.Rotate(0, 180, 0);
         isFacingRight = !isFacingRight;
         facingDirection = facingDirection * -1;
-		_canFlip = true;
-	}
-	#endregion
+        _canFlip = true;
+    }
+    #endregion
 
-	protected virtual void OnDrawGizmos()
-	{
-		Gizmos.DrawLine(transform.position, new Vector2(transform.position.x, transform.position.y - groundCheckDistance));
-		Gizmos.DrawLine(groundCheck.position, new Vector2(transform.position.x, transform.position.y - groundCheckDistance));
-		Gizmos.DrawLine(transform.position, new Vector2(transform.position.x + (wallCheckDistance * facingDirection), transform.position.y));
-		Gizmos.DrawLine(transform.position, new Vector2(transform.position.x + (playerDetectionDistance * facingDirection), transform.position.y));
+    protected virtual void OnDrawGizmos()
+    {
+        Gizmos.DrawLine(transform.position, new Vector2(transform.position.x, transform.position.y - groundCheckDistance));
+        Gizmos.DrawLine(groundCheck.position, new Vector2(transform.position.x, transform.position.y - groundCheckDistance));
+        Gizmos.DrawLine(transform.position, new Vector2(transform.position.x + (wallCheckDistance * facingDirection), transform.position.y));
+        Gizmos.DrawLine(transform.position, new Vector2(transform.position.x + (playerDetectionDistance * facingDirection), transform.position.y));
 
-	}
+    }
 }

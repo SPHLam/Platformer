@@ -20,7 +20,7 @@ public class FallingPlatform : MonoBehaviour
     private float _impactTimer;
     private bool _impactHappened;
     [Space]
-    [SerializeField] private float _fallDelay = 0.5f;
+    [SerializeField] private float _fallDelay = 0.75f;
 
     private void Awake()
     {

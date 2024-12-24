@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -8,15 +6,15 @@ public class Player : MonoBehaviour
     private DifficultyType _gameDifficulty;
     private GameManager _gameManager;
 
-    private CapsuleCollider2D _capsuleCollider2D;
-    private bool _canBeControlled = false;
-
     [Header("Movement Info")]
     [SerializeField] private float _speed = 7.5f;
     [SerializeField] private float _jumpForce = 2.5f;
     [SerializeField] private float _doubleJumpForce;
+    public PlayerInput _playerInput { get; private set; }
     private bool _canDoubleJump;
     private float _defaultGravityScale;
+    private Vector2 _moveInput;
+    private bool _canBeControlled = false;
 
     [Header("Collision Info")]
     [SerializeField] private float _groundCheckDistance;
@@ -27,13 +25,12 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform _enemyCheck;
     [SerializeField] private float _enemyCheckRadius;
 
+    private CapsuleCollider2D _capsuleCollider2D;
     private bool _isTouchingWall;
     private bool _isGrounded;
     private bool _isFacingRight = true;
     private bool _isAirborne;
     private float _facingDirection = 1f;
-    private float _xInput;
-    private float _yInput;
 
     [Header("Wall Info")]
     [SerializeField] private float _wallJumpDuration = 0.6f;
@@ -54,6 +51,7 @@ public class Player : MonoBehaviour
     [Header("Player Visuals")]
     [SerializeField] private GameObject _deathVFX;
     [SerializeField] private AnimatorOverrideController[] _animators;
+    [SerializeField] private ParticleSystem _dustVFX;
     [SerializeField] private int _skinId = 0;
 
     private Rigidbody2D _rigidBody;
@@ -64,6 +62,24 @@ public class Player : MonoBehaviour
         _rigidBody = GetComponent<Rigidbody2D>();
         _animator = GetComponentInChildren<Animator>();
         _capsuleCollider2D = GetComponent<CapsuleCollider2D>();
+        _playerInput = new PlayerInput();
+    }
+
+    private void OnEnable()
+    {
+        _playerInput.Enable();
+
+        _playerInput.Player.Movement.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
+        _playerInput.Player.Movement.canceled += ctx => _moveInput = Vector2.zero;
+        _playerInput.Player.Jump.performed += ctx => HandleJump();
+    }
+
+    private void OnDisable()
+    {
+        _playerInput.Disable();
+        _playerInput.Player.Movement.performed -= ctx => _moveInput = ctx.ReadValue<Vector2>();
+        _playerInput.Player.Movement.canceled -= ctx => _moveInput = Vector2.zero;
+        _playerInput.Player.Jump.performed -= ctx => HandleJump();
     }
 
     // Start is called before the first frame update
@@ -87,7 +103,6 @@ public class Player : MonoBehaviour
             HandleCollision();
             return;
         }
-            
 
         if (_isKnocked)
             return;
@@ -105,7 +120,7 @@ public class Player : MonoBehaviour
 
     #region Skin
 
-    public void UpdateSkin() 
+    public void UpdateSkin()
     {
         SkinManager skinManager = SkinManager.Instance;
 
@@ -137,10 +152,11 @@ public class Player : MonoBehaviour
         foreach (Collider2D enemy in colliders)
         {
             Enemy newEnemy = enemy.GetComponent<Enemy>();
-            
+
             if (newEnemy != null)
             {
                 newEnemy.Die();
+                AudioManager.Instance.PlaySFX(1);
                 Jump();
             }
 
@@ -161,7 +177,7 @@ public class Player : MonoBehaviour
         if (!canWallSlide)
             return;
 
-        float yModifier = _yInput < 0 ? 1 : 0.05f;
+        float yModifier = _moveInput.y < 0 ? 1 : 0.05f;
 
         _rigidBody.velocity = new Vector2(_rigidBody.velocity.x, _rigidBody.velocity.y * yModifier);
     }
@@ -218,16 +234,15 @@ public class Player : MonoBehaviour
     /// </summary>
     private void HandleMovement()
     {
-        // Get the horizontal & vertical input
-        _xInput = Input.GetAxisRaw("Horizontal");
-        _yInput = Input.GetAxisRaw("Vertical");
-
         // Touching the wall / wall jumping -> No movement
         if (_isTouchingWall || _isWallJumping)
             return;
 
         // Apply it to the velocity -> Moving
-        _rigidBody.velocity = new Vector2(_xInput * _speed, _rigidBody.velocity.y);
+        _rigidBody.velocity = new Vector2(_moveInput.x * _speed, _rigidBody.velocity.y);
+
+        if (Input.GetAxis("Horizontal") != 0 && _isGrounded)
+            _dustVFX.Play();
     }
 
     #endregion
@@ -273,7 +288,7 @@ public class Player : MonoBehaviour
     #region Flip
     private void HandleFlip()
     {
-        if ((_xInput < 0 && _isFacingRight) || (_xInput > 0 && !_isFacingRight))
+        if ((_moveInput.x < 0 && _isFacingRight) || (_moveInput.x > 0 && !_isFacingRight))
             Flip();
     }
 
@@ -314,9 +329,10 @@ public class Player : MonoBehaviour
     /// <summary>
     /// Jump
     /// </summary>
-    private void Jump() 
+    private void Jump()
     {
-        _rigidBody.velocity = new Vector2(_rigidBody.velocity.x, _jumpForce); 
+        _rigidBody.velocity = new Vector2(_rigidBody.velocity.x, _jumpForce);
+        AudioManager.Instance.PlaySFX(3);
     }
 
     #endregion
@@ -325,9 +341,10 @@ public class Player : MonoBehaviour
     /// <summary>
     /// Double Jump
     /// </summary>
-    private void DoubleJump() 
+    private void DoubleJump()
     {
         _rigidBody.velocity = new Vector2(_rigidBody.velocity.x, _doubleJumpForce);
+        AudioManager.Instance.PlaySFX(3);
         _canDoubleJump = false;
         _isWallJumping = false;
     }
@@ -350,6 +367,7 @@ public class Player : MonoBehaviour
     {
         _canDoubleJump = true;
         _rigidBody.velocity = new Vector2(_wallJumpForce.x * -_facingDirection, _wallJumpForce.y);
+        AudioManager.Instance.PlaySFX(12);
         Flip();
         StopAllCoroutines();
         StartCoroutine(WallJumpRoutine());
@@ -423,6 +441,8 @@ public class Player : MonoBehaviour
         if (_isKnocked)
             return;
 
+        AudioManager.Instance.PlaySFX(9);
+        CameraManager.Instance.ScreenShake(_facingDirection);
         StartCoroutine(KnockbackRoutine());
         _rigidBody.velocity = new Vector2(_knockBackPower.x * -_facingDirection, _knockBackPower.y);
     }
@@ -459,6 +479,7 @@ public class Player : MonoBehaviour
     public void Die()
     {
         GameObject newDeathVFX = Instantiate(_deathVFX, transform.position, Quaternion.identity);
+        AudioManager.Instance.PlaySFX(0);
         Destroy(gameObject);
     }
 
@@ -473,6 +494,7 @@ public class Player : MonoBehaviour
             _rigidBody.gravityScale = _defaultGravityScale;
             _canBeControlled = true;
             _capsuleCollider2D.enabled = true;
+            AudioManager.Instance.PlaySFX(10);
         }
         else
         {
@@ -506,7 +528,7 @@ public class Player : MonoBehaviour
     /// Draw gizmos
     /// </summary>
     private void OnDrawGizmos()
-    { 
+    {
         Gizmos.DrawWireSphere(_enemyCheck.position, _enemyCheckRadius);
         Gizmos.DrawLine(transform.position, new Vector2(transform.position.x, transform.position.y - _groundCheckDistance));
         Gizmos.DrawLine(transform.position, new Vector2(transform.position.x + (_wallCheckDistance * _facingDirection), transform.position.y));

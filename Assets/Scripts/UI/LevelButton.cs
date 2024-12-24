@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,9 +11,10 @@ public class LevelButton : MonoBehaviour
     private int _levelIndex;
     public void LoadLevel()
     {
-        int difficultyIndex = (int) DifficultyManager.Instance.difficulty;
+        int difficultyIndex = (int)DifficultyManager.Instance.difficulty;
         PlayerPrefs.SetInt("GameDifficulty", difficultyIndex);
         SceneManager.LoadScene(_sceneName);
+        AudioManager.Instance.PlaySFX(4);
     }
 
     public void SetUpButton(int levelIndex)
@@ -29,7 +28,7 @@ public class LevelButton : MonoBehaviour
 
     private string TimerInfoText()
     {
-        float timerValue =  PlayerPrefs.GetFloat("Level" + _levelIndex + "BestTime", 0);
+        float timerValue = PlayerPrefs.GetFloat("Level" + _levelIndex + "BestTime", 0);
         return "Best Time: " + timerValue.ToString("00");
     }
 
