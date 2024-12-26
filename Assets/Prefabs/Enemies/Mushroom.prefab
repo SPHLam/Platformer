@@ -256,8 +256,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   groundCheck: {fileID: 1757690693701452409}
-  _deathImpactSpeed: 5
-  _deathRotationSpeed: 150
+  deathImpactSpeed: 5
+  deathRotationSpeed: 150
 --- !u!61 &7813231600137080200
 BoxCollider2D:
   m_ObjectHideFlags: 0

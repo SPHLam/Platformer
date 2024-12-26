@@ -119,7 +119,6 @@ public class SkinSelection : MonoBehaviour
             return;
         }
 
-
         string skinName = _skinList[_skinIndex].skinName;
         _skinList[_skinIndex].unlocked = true;
 

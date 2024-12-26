@@ -238,8 +238,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   groundCheck: {fileID: 5006553566412543270}
-  _deathImpactSpeed: 5
-  _deathRotationSpeed: 150
+  deathImpactSpeed: 5
+  deathRotationSpeed: 150
   _aggroDuration: 3
 --- !u!1 &7320097478413631342
 GameObject:
